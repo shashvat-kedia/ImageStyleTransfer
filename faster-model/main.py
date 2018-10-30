@@ -7,6 +7,7 @@ import pdb
 from __future__ import print_function
 from operator import mul
 import random
+import time
 
 STYLE_LAYERS = ('relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1')
 CONTENT_LAYER = 'relu4_2'
@@ -99,7 +100,7 @@ def weights_init(net,out_channels,filter_size,transpose=False):
     weights = tf.Variable(tf.truncated_normal(shape,stddev=0.1),dtype=tf.float32)
     return weights
 
-def optimize(content_targets,style_target,content_weight,style_weight,tv_weight,vgg_path,batch_size,slow=False):
+def optimize(content_targets,style_target,content_weight,style_weight,tv_weight,vgg_path,batch_size,epochs=2,slow=False):
     if slow:
         batch_size = 1
     mod = len(content_targets) % batch_size
@@ -156,6 +157,44 @@ def optimize(content_targets,style_target,content_weight,style_weight,tv_weight,
         sess.run(tf.global_variables_initialier())
         uid = random.randint(1,100)
         print("UID: ",uid)
+        for epoch in range(epochs):
+            num_examples = len(content_targets)
+            iterations = 0
+            while iterations * batch_size < num_examples:
+                start_time = time.time()
+                curr = iterationis * batch_size
+                step = curr + batch_size
+                x_batch = np.zeros(shape,dtype=np.float32)
+                for j,img_p in enumerate(content_targets[curr:step]):
+                    x_batch[j] = get_img(img_p,(256,256,3)).astype(np.float32)
+                iteration += 1
+                assert x_batch.shape[0] == batch_size
+                feed_dict = {
+                x_content:x_batch
+                }
+                train_step.run(feed_dict=feed_dict)
+                end_time = time.time()
+                delta_time = end_time - start_time
+                is_print_iter = int(iterations) % 1000 == 0
+                if slow:
+                    is_print_iter = int(epochs) % 1000 == 0
+                is_last = epoch == epochs - 1 and iterations * batch_size >= num_examples
+                should_print = is_print_iter or is_last
+                if should_print:
+                    to_get = [style_loss,content_loss,tv_loss,loss,preds]
+                    test_feed_dict = {
+                    x_content:x_batch
+                    }
+                    tup = sess.run(to_get,feed_dict=test_feed_dict)
+                    _style_loss,_content_loss,_tv_loss,_loss,_preds = tup
+                    losses = (_style_loss,_content_loss,_tv_loss,_loss)
+                    if slow:
+                        _preds = vgg.unprocess(_preds)
+                    else:
+                        saver = tf.train.Saver()
+                        res = saver.save(sess,save_path)
+                    yield(_preds,losses,iterations,epoch)
+
 
 def tensor_size(tensor):
     return functools.reduce(mul,(d.value for d in tensor.get_shape()[1:]),1)
