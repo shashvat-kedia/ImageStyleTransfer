@@ -130,7 +130,7 @@ def optimize(content_targets,style_target,content_weight,style_weight,tv_weight,
             preds = tf.Variable(tf.random_normal(content_image.get_shape())) * 0.256
             preds_pre = preds
         else:
-            preds = transform.net(content_image/255.0)
+            preds = net(content_image/255.0)
             preds_pre = vgg.preprocess(preds)
         net = vgg.net(vgg_path,preds_pre)
         content_size = tensor_size(content_eatures[CONTENT_LAYER]) * batch_size
@@ -198,3 +198,26 @@ def optimize(content_targets,style_target,content_weight,style_weight,tv_weight,
 
 def tensor_size(tensor):
     return functools.reduce(mul,(d.value for d in tensor.get_shape()[1:]),1)
+
+def main():
+    slow = 1
+    kwargs = {
+    "slow": slow,
+    "epochs": 100,
+    "print_iterations": 10,
+    "batch_size": 10,
+    "learning_rate": 1e-3
+    }
+    if slow:
+        if kwargs["epochs"] < 10:
+            kwargs["epochs"] = 1000
+        if kwargs["learning_rate"] < 1:
+            kwargs["learning_rate"] = 1e1
+    args = {
+    content_targets,
+    style_targets,
+    content_weight,
+    style_weight,
+    tv_weight,
+    vgg_path
+    }
