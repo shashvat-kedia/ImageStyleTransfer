@@ -80,14 +80,12 @@ def resnet_block(net,filter_size=3):
     layer = conv2d(net,128,filter_size,1)
     return net + conv2d(layer,128,filter_size,1,relu=False)
 
-def instance_norm(net):
-    mean,var = tf.nn.moments(net)[0,1]
+def instance_norm(net,epsilon=1e-3):
     batch_size,rows,columns,in_channels = [i.value for i in net.get_shape()]
     var_shape = [in_channels]
     mu,sigma_sq = tf.nn.moments(net,[1,2],keep_dims = True)
     shift = tf.Variable(tf.zeros(var_shape))
     scale = tf.Variable(tf.ones(var_shape))
-    epsilon = 1e-3
     normalized = tf.divide(tf.subtract(net,mu),tf.sqrt(tf.add(sigma_sq,epsilon)))
     return scale * normalized + shift
 
