@@ -201,8 +201,8 @@ def main():
     slow = 1
     kwargs = {
     "slow": slow,
-    "epochs": 100,
-    "print_iterations": 10,
+    "epochs": 1000,
+    "print_iterations": 100,
     "batch_size": 10,
     "learning_rate": 1e-3
     }
