@@ -114,7 +114,7 @@ def optimize(content_targets,style_target,content_weight,style_weight,tv_weight,
         net = vgg.net(vgg_path,style_image_processed)
         style_pre_pro = np.array([style_target])
         for layer in STYLE_LAYERS:
-            features = net[layer].eval(feed_dict={style_image:})
+            features = net[layer].eval(feed_dict={style_image:style_image})
             features = np.reshape(features,(-1,features.shape[3]))
             gram = np.matmul(features.T,features) / features.size
             style_features[layer] = gram
@@ -131,7 +131,7 @@ def optimize(content_targets,style_target,content_weight,style_weight,tv_weight,
             preds = net(content_image/255.0)
             preds_pre = vgg.preprocess(preds)
         net = vgg.net(vgg_path,preds_pre)
-        content_size = tensor_size(content_eatures[CONTENT_LAYER]) * batch_size
+        content_size = tensor_size(content_features[CONTENT_LAYER]) * batch_size
         assert tensor_size(content_features[CONTENT_LAYER]) == tensor_size(net[CONTENT_LAYER])
         content_loss = content_weight * (2 * tf.nn.l2_loss(net[CONTENT_LAYER] - content_features[CONTENT_LAYER])/content_size)
         style_losses = []
